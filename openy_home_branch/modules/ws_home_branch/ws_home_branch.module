@@ -11,6 +11,11 @@ use Drupal\node\NodeInterface;
  * Implements hook_preprocess_page().
  */
 function ws_home_branch_preprocess_page(array &$variables) {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $variables['node'] ?? NULL;
+  if (_ws_home_branch_skip_override($node)) {
+    return;
+  }
   if (\Drupal::hasService('plugin.manager.home_branch_library')) {
     $hb_plugin_service = \Drupal::service('plugin.manager.home_branch_library');
     $hb_plugin_service->attachHbLibrarySettings($variables, 'hb_location_finder', [
@@ -19,11 +24,6 @@ function ws_home_branch_preprocess_page(array &$variables) {
       'selectedText' => t('Preferred location'),
       'notSelectedText' => t('Preferred location'),
     ]);
-  }
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = $variables['node'] ?? NULL;
-  if (_ws_home_branch_skip_override($node)) {
-    return;
   }
   $variables['#attached']['library'][] = 'ws_home_branch/location_modal_override';
 }
