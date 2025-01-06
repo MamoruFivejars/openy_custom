@@ -113,7 +113,9 @@ class HolidayHoursFormatter extends FormatterBase implements ContainerFactoryPlu
 
       $holiday_timestamp = $values['date'];
       $request_time = \Drupal::time()->getRequestTime();
-      if ($request_time < ($holiday_timestamp + $show_after_offset) && ($holiday_timestamp - $request_time) <= $show_before_offset) {
+      $expiration_date = $holiday_timestamp + $show_after_offset;
+
+      if ($request_time < $expiration_date && ($holiday_timestamp - $request_time) <= $show_before_offset) {
         $title = Html::escape($values['holiday']);
         $rows[] = [
           'data' => [
@@ -122,6 +124,15 @@ class HolidayHoursFormatter extends FormatterBase implements ContainerFactoryPlu
           ],
           'data-timestamp' => $holiday_timestamp,
         ];
+
+        // Set max-age based on the time remaining until the next holiday.
+        if (isset($max_age)) {
+          $max_age = min($max_age, $expiration_date - $request_time);
+        }
+        else {
+          $max_age = $expiration_date - $request_time;
+        }
+
       }
     }
 
@@ -131,6 +142,7 @@ class HolidayHoursFormatter extends FormatterBase implements ContainerFactoryPlu
       '#rows' => $rows,
       '#cache' => [
         'tags' => ['ymca_cron'],
+        'max-age' => $max_age ?? -1,
       ],
     ];
 
